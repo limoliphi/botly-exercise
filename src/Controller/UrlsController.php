@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Url;
 use App\Repository\UrlRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,11 +14,18 @@ use Symfony\Component\Validator\Constraints\Url as UrlConstraints;
 
 class UrlsController extends AbstractController
 {
+    private $urlRepository;
+
+    public function __construct(UrlRepository $urlRepository)
+    {
+        $this->urlRepository = $urlRepository;
+    }
+
     /**
      * @Route("/", name="app_home", methods="GET|POST")
      * @Route("/", name="app_urls_create", methods="GET|POST")
      */
-    public function create(Request $request, UrlRepository $urlRepository): Response
+    public function create(Request $request, EntityManagerInterface $em): Response
     {
         $form = $this->createFormBuilder()
             ->add('original', null, [
@@ -36,18 +44,25 @@ class UrlsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            //vérifier que l'url entrée a déjà été raccourcie
-            $url = $urlRepository->findOneBy(['original' => $form['original']->getData()]);
-
+            //vérifie que l'url entrée a déjà été raccourcie
+            $url = $this->urlRepository->findOneBy(['original' => $form['original']->getData()]);
+            //preview de l'url raccourcie
             if ($url) {
                 return $this->redirectToRoute('app_urls_preview', ['shortened' => $url->getShortened()]);
             }
 
-            //preview de l'url raccourcie
-
-            //sir l'url n'a pas déjà été raccourcie
+            //si l'url n'a pas déjà été raccourcie
             //alors on la raccourcit
             //et on retourne la version preview raccourcie
+            $url = new Url();
+            $url->setOriginal($form['original']->getData());
+            //il faudra créer une méthod epour générer une chaîne de caractères aléatoire
+            //car il y a une contrainte d'unicité
+            $url->setShortened($this->getUniqueShortenedString());
+            $em->persist($url);
+            $em->flush();
+
+            return $this->redirectToRoute('app_urls_preview', ['shortened' => $url->getShortened()]);
     }
 
         return $this->render('urls/create.html.twig', [
@@ -69,5 +84,16 @@ class UrlsController extends AbstractController
     public function show(Url $url): Response
     {
         return $this->redirect($url->getOriginal());
+    }
+
+    private function getUniqueShortenedString(): string
+    {
+        $shortened = substr(bin2hex(random_bytes(32)), 0, 6);
+
+        if ($this->urlRepository->findOneBy(compact('shortened'))) {
+            return $this->getUniqueShortenedString();
+        }
+
+        return $shortened;
     }
 }
