@@ -45,14 +45,40 @@ class UrlsControllerTest extends WebTestCase
 
         $em = self::$container->get('doctrine')->getManager();
 
-        $url = new Url();
-        $url->setOriginal('https://airbnb.com');
+        $original = 'https://airbnb.com';
         $shortened = Str::random(6);
+
+        $url = new Url();
+        $url->setOriginal($original);
         $url->setShortened($shortened);
         $em->persist($url);
         $em->flush();
 
         $client->request('GET', '/'.$shortened);
-        $this->assertResponseRedirects();
+        $this->assertResponseRedirects($original);
+    }
+
+    /** @test */
+    public function preview_shortened_version_should_work()
+    {
+        $client = static::createClient();
+
+        $em = self::$container->get('doctrine')->getManager();
+
+        $original = 'https://parlonscode.com';
+        $shortened = Str::random(6);
+
+        $url = new Url();
+        $url->setOriginal($original);
+        $url->setShortened($shortened);
+        $em->persist($url);
+        $em->flush();
+
+        $crawler = $client->request('GET', sprintf('/%s/preview', $shortened));
+        $this->assertSelectorTextContains('h1', 'Yeah ! Here is your shortened URL :');
+        $this->assertSelectorTextContains('a', 'http://localhost/' . $shortened);
+
+        $client->clickLink('Go back home');
+        $this->assertRouteSame('app_home');
     }
 }
