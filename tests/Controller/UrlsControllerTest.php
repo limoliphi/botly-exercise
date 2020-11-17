@@ -23,19 +23,29 @@ class UrlsControllerTest extends WebTestCase
     }
 
     /** @test */
-    public function form_should_work_with_valid_data()
+    public function create_should_shorten_url_if_that_doesnt_exists_yet()
     {
         $client = static::createClient();
+
         $crawler = $client->request('GET', '/');
 
         $this->assertResponseIsSuccessful();
 
         $form = $crawler->filter('form')->form();
 
+        $original = 'https://python.org';
+
         $client->submit($form, [
             'form[original]' => 'https://python.org',
         ]);
-        $this->assertResponseRedirects();
+
+        $em = static::$container->get('doctrine')->getManager();
+
+        $urlRepository = $em->getRepository(Url::class);
+
+        $url = $urlRepository->findOneBy(compact('original'));
+
+        $this->assertResponseRedirects(sprintf('/%s/preview', $url->getShortened()));
     }
 
     /** @test */
