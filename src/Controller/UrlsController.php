@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Url;
 use App\Repository\UrlRepository;
-use App\Utils\Str;
 use Doctrine\ORM\EntityManagerInterface;
+use Illuminate\Support\Str;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +24,6 @@ class UrlsController extends AbstractController
 
     /**
      * @Route("/", name="app_home", methods="GET|POST")
-     * @Route("/", name="app_urls_create", methods="GET|POST")
      */
     public function create(Request $request, EntityManagerInterface $em): Response
     {
