@@ -6,7 +6,6 @@ use App\Entity\Url;
 use App\Form\UrlFormType;
 use App\Repository\UrlRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Illuminate\Support\Str;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,9 +35,6 @@ class UrlsController extends AbstractController
             //si on ne trouve pas d'URL, on crée une nouvelle URL, et si on la trouve on passe à la suite
             if (! $url) {
                 $url = $form->getData();
-                //il faudra créer une méthode pour générer une chaîne de caractères aléatoire
-                //car il y a une contrainte d'unicité
-                $url->setShortened($this->getUniqueShortenedString());
                 $em->persist($url);
                 $em->flush();;
             }
@@ -66,17 +62,5 @@ class UrlsController extends AbstractController
     public function show(Url $url): Response
     {
         return $this->redirect($url->getOriginal());
-    }
-
-    private function getUniqueShortenedString(): string
-    {
-        //ajout d'une classe utilitaire pour la génération de string alétoire
-        $shortened = Str::random(6);
-
-        if ($this->urlRepository->findOneBy(compact('shortened'))) {
-            return $this->getUniqueShortenedString();
-        }
-
-        return $shortened;
     }
 }
