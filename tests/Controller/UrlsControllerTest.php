@@ -18,12 +18,12 @@ class UrlsControllerTest extends WebTestCase
         $this->assertPageTitleSame('Botly');
         $this->assertSelectorTextContains('h1', 'The best URL shortener out there !');
         $this->assertSelectorExists('form');
-        $this->assertSelectorExists('input[name="form[original]"]');
+        $this->assertSelectorExists('input[name="url_form[original]"]');
         $this->assertSelectorExists('input[placeholder="Enter the URL to shorten here"]');
     }
 
     /** @test */
-    public function create_should_shorten_url_if_that_doesnt_exists_yet()
+    public function create_should_shorten_url_if_that_url_hasnt_been_shortened_yet()
     {
         $client = static::createClient();
 
@@ -36,7 +36,7 @@ class UrlsControllerTest extends WebTestCase
         $original = 'https://python.org';
 
         $client->submit($form, [
-            'form[original]' => 'https://python.org',
+            'url_form[original]' => 'https://python.org',
         ]);
 
         $em = static::$container->get('doctrine')->getManager();
@@ -66,7 +66,7 @@ class UrlsControllerTest extends WebTestCase
         $form = $crawler->filter('form')->form();
 
         $client->submit($form, [
-            'form[original]' => 'https://symfony.com',
+            'url_form[original]' => 'https://symfony.com',
         ]);
 
         $this->assertResponseRedirects('/qwerty/preview');
@@ -152,7 +152,7 @@ class UrlsControllerTest extends WebTestCase
         $form = $crawler->filter('form')->form();
 
         $client->submit($form, [
-            'form[original]' => ''
+            'url_form[original]' => ''
         ]);
 
         $this->assertSelectorTextContains('ul > li', 'You need to enter an URL');
@@ -168,7 +168,7 @@ class UrlsControllerTest extends WebTestCase
         $form = $crawler->filter('form')->form();
 
         $client->submit($form, [
-            'form[original]' => 'blablabla'
+            'url_form[original]' => 'blablabla'
         ]);
 
         $this->assertSelectorTextContains('ul > li', 'The URL entered is invalid');
