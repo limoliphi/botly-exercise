@@ -155,7 +155,7 @@ class UrlsControllerTest extends WebTestCase
             'url_form[original]' => ''
         ]);
 
-        $this->assertSelectorTextContains('ul > li', 'You need to enter an URL');
+        $this->assertSelectorTextContains('div.error-message', 'You need to enter an URL');
     }
 
     /** @test */
@@ -171,6 +171,6 @@ class UrlsControllerTest extends WebTestCase
             'url_form[original]' => 'blablabla'
         ]);
 
-        $this->assertSelectorTextContains('ul > li', 'The URL entered is invalid');
+        $this->assertSelectorTextContains('div.error-message', 'The URL entered is invalid');
     }
 }
