@@ -13,17 +13,11 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UrlsController extends AbstractController
 {
-    private $urlRepository;
-
-    public function __construct(UrlRepository $urlRepository)
-    {
-        $this->urlRepository = $urlRepository;
-    }
 
     /**
      * @Route("/", name="app_home", methods="GET|POST")
      */
-    public function create(Request $request, EntityManagerInterface $em): Response
+    public function create(Request $request, EntityManagerInterface $em, UrlRepository $urlRepository): Response
     {
         $form = $this->createForm(UrlFormType::class);
 
@@ -31,17 +25,17 @@ class UrlsController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             //On recherche une url qui a comme original ce qui a été entré (donc déjà raccourci)
-            $url = $this->urlRepository->findOneBy(['original' => $form['original']->getData()]);
+            $url = $urlRepository->findOneBy(['original' => $form['original']->getData()]);
             //si on ne trouve pas d'URL, on crée une nouvelle URL, et si on la trouve on passe à la suite
-            if (! $url) {
+            if (!$url) {
                 $url = $form->getData();
                 $em->persist($url);
                 $em->flush();;
             }
 
-            //On redirige l'utilisateur vers le preview
+            //On redirige l'utilisateur vers la preview
             return $this->redirectToRoute('app_urls_preview', ['shortened' => $url->getShortened()]);
-    }
+        }
 
         return $this->render('urls/create.html.twig', [
             'form' => $form->createView()
